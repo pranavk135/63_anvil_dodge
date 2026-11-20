@@ -1,6 +1,7 @@
 import pygame
 from game.player import Player
 from game.anvil import Anvil
+from game.effects import Particle
 
 INITIAL_SPAWN_DELAY = 700   # ms
 MIN_SPAWN_DELAY = 250       # ms
@@ -24,6 +25,8 @@ class GameEngine:
         self.font_big = pygame.font.SysFont(None, 52)
         self.font_medium = pygame.font.SysFont(None, 34)
         self.font_small = pygame.font.SysFont(None, 24)
+        
+        self.particles = []
 
     def handle_event(self, event):
         if self.game_state == "GAME_OVER":
@@ -51,14 +54,25 @@ class GameEngine:
             self.last_spawn_time = now
 
         player_rect = self.player.rect
+        ground_y = self.height - 20
         for anvil in self.anvils[:]:
             anvil.update()
 
             if player_rect.colliderect(anvil.rect):
                 self.game_state = "GAME_OVER"
+                break
 
-            if anvil.is_off_screen(self.height):
+            if anvil.rect.bottom >= ground_y:
+                for _ in range(10):
+                    self.particles.append(Particle(anvil.rect.centerx, ground_y))
                 self.anvils.remove(anvil)
+            elif anvil.is_off_screen(self.height):
+                self.anvils.remove(anvil)
+
+        for p in self.particles[:]:
+            p.update()
+            if not p.alive:
+                self.particles.remove(p)
 
     def reset(self):
         self.player = Player(self.width, self.height)
@@ -68,6 +82,7 @@ class GameEngine:
         self.survival_time = 0
         self.game_state = "PLAYING"
         self.spawn_delay = INITIAL_SPAWN_DELAY
+        self.particles.clear()
 
     def render(self, screen):
         screen.fill((35, 38, 45))
@@ -79,6 +94,9 @@ class GameEngine:
         self.player.render(screen)
         for anvil in self.anvils:
             anvil.render(screen)
+            
+        for p in self.particles:
+            p.render(screen)
 
         time_surf = self.font_medium.render(f"Survival Time: {self.survival_time}s", True, (240, 240, 240))
         screen.blit(time_surf, (20, 20))
