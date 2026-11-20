@@ -2,6 +2,10 @@ import pygame
 from game.player import Player
 from game.anvil import Anvil
 
+INITIAL_SPAWN_DELAY = 700   # ms
+MIN_SPAWN_DELAY = 250       # ms
+DELAY_STEP_PER_SEC = 15     # ms removed per second survived
+
 
 class GameEngine:
     def __init__(self, width, height):
@@ -10,7 +14,7 @@ class GameEngine:
         self.player = Player(width, height)
         self.anvils = []
 
-        self.spawn_delay = 700
+        self.spawn_delay = INITIAL_SPAWN_DELAY
         self.last_spawn_time = pygame.time.get_ticks()
 
         self.start_ticks = pygame.time.get_ticks()
@@ -39,6 +43,7 @@ class GameEngine:
         self.player.update()
 
         self.survival_time = (pygame.time.get_ticks() - self.start_ticks) // 1000
+        self.spawn_delay = max(MIN_SPAWN_DELAY, INITIAL_SPAWN_DELAY - self.survival_time * DELAY_STEP_PER_SEC)
 
         now = pygame.time.get_ticks()
         if now - self.last_spawn_time >= self.spawn_delay:
@@ -62,6 +67,7 @@ class GameEngine:
         self.last_spawn_time = pygame.time.get_ticks()
         self.survival_time = 0
         self.game_state = "PLAYING"
+        self.spawn_delay = INITIAL_SPAWN_DELAY
 
     def render(self, screen):
         screen.fill((35, 38, 45))
