@@ -13,10 +13,10 @@ class Player:
         self.y = screen_height - self.height - 20
 
     def move_left(self):
-        self.x -= self.speed
+        self.x = max(0, self.x - self.speed)
 
     def move_right(self):
-        self.x += self.speed
+        self.x = min(self.screen_width - self.width, self.x + self.speed)
 
     def update(self):
         pass
